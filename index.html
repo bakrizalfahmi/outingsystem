@@ -3,173 +3,379 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Permohonan Keluar Asrama</title>
-    <!-- Memuatkan Tailwind CSS untuk penggayaan -->
+    <title>Sistem Permohonan Keluar Asrama - SMKA Baling</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Menambah sedikit gaya tambahan */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .loader {
-            border-top-color: #3498db;
-            -webkit-animation: spin 1s linear infinite;
-            animation: spin 1s linear infinite;
-        }
-        @-webkit-keyframes spin {
-            0% { -webkit-transform: rotate(0deg); }
-            100% { -webkit-transform: rotate(360deg); }
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        body { font-family: 'Inter', sans-serif; }
+        .loader { border-top-color: #3498db; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .view { transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out; }
+        .view.hidden { opacity: 0; transform: scale(0.98); pointer-events: none; position: absolute; width: 100%;}
+        .input-field { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; }
+        .action-btn { padding: 0.25rem 0.5rem; font-size: 0.75rem; border-radius: 0.375rem; font-weight: 500; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-2xl">
-        
-        <header class="text-center mb-8">
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Sistem Permohonan Keluar Asrama</h1>
-            <p class="text-gray-600 mt-1">Sila masukkan Kod Waris untuk memaparkan maklumat anak jagaan.</p>
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 relative">
+
+        <!-- ===== BAHAGIAN HEADER BARU ===== -->
+        <header class="text-center mb-10">
+            <img src="https://i.ibb.co/5hf6PqP9/smkab-T.png" alt="Logo SMKA Baling" class="w-24 h-24 mx-auto mb-4">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase">Sekolah Menengah Kebangsaan Agama Baling</h1>
+            <p id="datetime" class="text-gray-600 mt-2 text-sm"></p>
         </header>
 
-        <!-- Bahagian Carian -->
-        <div class="bg-white p-6 rounded-xl shadow-lg">
-            <div class="flex flex-col sm:flex-row gap-4">
-                <input type="text" id="kodWarisInput" placeholder="Masukkan Kod Waris di sini..." class="flex-grow w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
-                <button id="searchButton" class="w-full sm:w-auto bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-300 ease-in-out flex items-center justify-center">
-                    <svg id="searchIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    <span id="buttonText">Cari</span>
-                    <div id="loadingSpinner" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-5 w-5 mr-2 hidden"></div>
-                </button>
+        <!-- ===== Bahagian Carian (View 1) ===== -->
+        <div id="searchView" class="view">
+            <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+                <div class="text-center">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Sistem Permohonan Keluar Asrama/Pulang Bermalam</h1>
+                    <p class="text-gray-600 mb-6">Sila masukkan Kod Waris anda untuk meneruskan.</p>
+                </div>
+                <form id="searchForm" class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <input type="text" id="kodWarisInput" placeholder="Masukkan Kod Waris..." class="flex-grow input-field">
+                    <button type="submit" id="searchButton" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <span id="searchButtonText">Cari</span>
+                        <div id="loadingSpinner" class="hidden loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5" style="border-top-color: white;"></div>
+                    </button>
+                </form>
+                <div id="statusContainer" class="text-center py-5"><p id="statusMessage" class="text-gray-500">Sila mulakan carian.</p></div>
             </div>
         </div>
 
-        <!-- Bahagian Mesej Ralat -->
-        <div id="errorMessage" class="hidden mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
-            <strong class="font-bold">Ralat!</strong>
-            <span class="block sm:inline" id="errorText"></span>
+        <!-- ===== Bahagian Paparan Maklumat (View 2) ===== -->
+        <div id="resultsView" class="view hidden">
+             <div class="bg-white rounded-xl shadow-lg p-6 max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 border-b pb-4">Maklumat Anak Jagaan</h2>
+                <form id="updateForm">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6 mb-8">
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-700 mb-3">Butiran Murid</h3>
+                            <div class="space-y-4 text-sm">
+                                <div><p class="font-medium text-gray-500">Nama Anak</p><p id="namaAnakDisplay" class="text-lg font-semibold text-gray-800"></p><input type="text" id="namaAnakInput" class="input-field hidden"></div>
+                                <div><p class="font-medium text-gray-500">Tingkatan</p><p id="tingkatanDisplay" class="text-lg font-semibold text-gray-800"></p><input type="text" id="tingkatanInput" class="input-field hidden"></div>
+                                <div><p class="font-medium text-gray-500">Jantina</p><p id="jantinaDisplay" class="text-lg font-semibold text-gray-800"></p><input type="text" id="jantinaInput" class="input-field hidden"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-700 mb-3">Butiran Waris</h3>
+                            <div class="space-y-4 text-sm">
+                                <div><p class="font-medium text-gray-500">Nama Waris</p><p id="namaWarisDisplay" class="text-base text-gray-800"></p><input type="text" id="namaWarisInput" class="input-field hidden"></div>
+                                <div><p class="font-medium text-gray-500">Kod Waris</p><p id="kodWarisDisplay" class="text-base text-gray-800 font-mono"></p></div>
+                                <div><p class="font-medium text-gray-500">Email</p><p id="emailDisplay" class="text-base text-gray-800"></p><input type="email" id="emailInput" class="input-field hidden"></div>
+                                <div><p class="font-medium text-gray-500">No. Telefon</p><p id="noTelefonDisplay" class="text-base text-gray-800"></p><input type="tel" id="noTelefonInput" class="input-field hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <div id="historySection" class="mt-8">
+                    <h3 class="text-lg font-semibold text-blue-700 mb-3">Sejarah Permohonan</h3>
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tarikh Mohon</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tujuan</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationHistoryBody" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                    <p id="noHistoryMessage" class="hidden text-center text-gray-500 py-4">Tiada sejarah permohonan ditemui.</p>
+                </div>
+
+                <div id="actionButtons" class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+                    <button id="updateButton" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700">Kemaskini Maklumat</button>
+                    <button id="newApplicationButton" class="bg-purple-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-purple-700">Permohonan Baru</button>
+                </div>
+                <div id="editButtons" class="hidden mt-8 flex flex-col sm:flex-row justify-center gap-3">
+                    <button id="saveButton" type="submit" form="updateForm" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <span>Simpan Perubahan</span>
+                        <div class="loader hidden ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5" style="border-top-color: white;"></div>
+                    </button>
+                    <button id="cancelButton" type="button" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700">Batal</button>
+                </div>
+                <div class="mt-4 text-center"><button id="backToSearchButton" class="text-sm text-gray-500 hover:underline">« Kembali ke Carian</button></div>
+             </div>
         </div>
 
-        <!-- Bahagian Paparan Maklumat Murid -->
-        <div id="muridInfoContainer" class="hidden mt-6 bg-white p-6 rounded-xl shadow-lg animate-fade-in">
-            <h2 class="text-xl font-bold border-b pb-3 mb-4 text-gray-900">Maklumat Murid dan Waris</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                <div>
-                    <p class="text-sm text-gray-500">Nama Waris</p>
-                    <p id="namaWaris" class="font-semibold text-lg"></p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Nama Anak</p>
-                    <p id="namaAnak" class="font-semibold text-lg"></p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Email</p>
-                    <p id="email" class="font-semibold"></p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">No. Telefon</p>
-                    <p id="noTelefon" class="font-semibold"></p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Jantina</p>
-                    <p id="jantina" class="font-semibold"></p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-500">Tingkatan</p>
-                    <p id="tingkatan" class="font-semibold"></p>
-                </div>
+        <div id="applicationView" class="view hidden">
+             <div class="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
+                <h2 id="applicationTitle" class="text-2xl font-bold text-gray-900 mb-6 border-b pb-4">Borang Permohonan Keluar</h2>
+                <form id="applicationForm">
+                    <input type="hidden" id="appIdInput">
+                    <div class="space-y-4">
+                        <div><label class="font-medium text-gray-700">Nama Pemohon</label><input type="text" id="appNamaPemohon" class="input-field bg-gray-100" readonly></div>
+                        <div><label class="font-medium text-gray-700">Nama Anak</label><input type="text" id="appNamaAnak" class="input-field bg-gray-100" readonly></div>
+                        <div><label class="font-medium text-gray-700">Tujuan</label><textarea id="appTujuan" class="input-field" rows="3" required></textarea></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="font-medium text-gray-700">Tarikh Keluar</label><input type="date" id="appTarikhKeluar" class="input-field" required></div>
+                            <div><label class="font-medium text-gray-700">Masa Keluar</label><input type="time" id="appMasaKeluar" class="input-field" required></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="font-medium text-gray-700">Tarikh Kembali</label><input type="date" id="appTarikhKembali" class="input-field" required></div>
+                            <div><label class="font-medium text-gray-700">Masa Kembali</label><input type="time" id="appMasaKembali" class="input-field" required></div>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+                        <button id="appSubmitButton" type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                            <span id="appSubmitButtonText">Hantar Permohonan</span>
+                            <div class="loader hidden ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5" style="border-top-color: white;"></div>
+                        </button>
+                        <button id="cancelApplicationButton" type="button" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700">Batal</button>
+                    </div>
+                </form>
             </div>
         </div>
-
     </div>
 
     <script>
-        // PENTING: Gantikan dengan URL Web App anda selepas 'deploy'
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMuQ88hnkg3tEB14LHIfaB3VB19PL1vU3saucDT5AtKkYFH8O4xZa_2EKegavX3eSR-g/exec";
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw_nFI9_pBScTrv4E9IrARtsVbiBYjGuHS92bsxnGfYBSW56Xh0JeDijUofk7mXwJ8fvg/exec';
 
-        // Dapatkan elemen dari DOM
-        const searchButton = document.getElementById('searchButton');
+        const views = { search: document.getElementById('searchView'), results: document.getElementById('resultsView'), application: document.getElementById('applicationView') };
+        const searchForm = document.getElementById('searchForm');
+        const updateForm = document.getElementById('updateForm');
+        const applicationForm = document.getElementById('applicationForm');
+        const statusMessage = document.getElementById('statusMessage');
         const kodWarisInput = document.getElementById('kodWarisInput');
-        const muridInfoContainer = document.getElementById('muridInfoContainer');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
+        const applicationHistoryBody = document.getElementById('applicationHistoryBody');
+        const noHistoryMessage = document.getElementById('noHistoryMessage');
         
-        // Elemen butang
-        const buttonText = document.getElementById('buttonText');
-        const searchIcon = document.getElementById('searchIcon');
-        const loadingSpinner = document.getElementById('loadingSpinner');
+        let allDataCache = null;
+        let currentItem = null;
 
-        // Tambah event listener pada butang carian
-        searchButton.addEventListener('click', cariMaklumatMurid);
-        kodWarisInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                cariMaklumatMurid();
+        function snakeToCamel(str) {
+            return str.toLowerCase().replace(/([_][a-z])/g, group => group.toUpperCase().replace('_', ''));
+        }
+
+        function switchView(viewName) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            if (views[viewName]) views[viewName].classList.remove('hidden');
+        }
+
+        function setButtonLoading(button, isLoading, loadingText = 'Memproses...') {
+            const textEl = button.querySelector('span');
+            const spinnerEl = button.querySelector('.loader');
+            if (button) button.disabled = isLoading;
+            if (textEl) {
+                if(isLoading) {
+                    textEl.dataset.originalText = textEl.textContent;
+                    textEl.textContent = loadingText;
+                } else {
+                    textEl.textContent = textEl.dataset.originalText || '';
+                }
+            }
+             if (spinnerEl) {
+                spinnerEl.classList.toggle('hidden', !isLoading);
+            }
+        }
+        
+        function setEditMode(isEditing) {
+            updateForm.querySelectorAll('p[id$="Display"]').forEach(el => el.classList.toggle('hidden', isEditing));
+            updateForm.querySelectorAll('input[id$="Input"]').forEach(el => el.classList.toggle('hidden', !isEditing));
+            document.getElementById('actionButtons').classList.toggle('hidden', isEditing);
+            document.getElementById('editButtons').classList.toggle('hidden', !isEditing);
+            if (isEditing) {
+                document.getElementById('namaAnakInput').value = currentItem.nama_anak;
+                document.getElementById('tingkatanInput').value = currentItem.tingkatan;
+                document.getElementById('jantinaInput').value = currentItem.jantina;
+                document.getElementById('namaWarisInput').value = currentItem.nama_waris;
+                document.getElementById('emailInput').value = currentItem.email;
+                document.getElementById('noTelefonInput').value = currentItem.no_telefon;
+            }
+        }
+
+        async function postData(payload) {
+            await fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            return { status: 'success' };
+        }
+
+        async function fetchData() {
+            if (allDataCache) return allDataCache;
+            statusMessage.textContent = 'Memuat turun data terkini...';
+            const response = await fetch(WEB_APP_URL);
+            if (!response.ok) throw new Error(`Ralat Rangkaian: ${response.status}`);
+            const result = await response.json();
+            if (result.status === 'error') throw new Error(result.message);
+            allDataCache = result.data;
+            return allDataCache;
+        }
+
+        function renderResults(item) {
+            currentItem = item;
+            Object.keys(item).forEach(key => {
+                const camelCaseKey = snakeToCamel(key);
+                const el = document.getElementById(camelCaseKey + 'Display');
+                if (el) el.textContent = item[key] || '-';
+            });
+        }
+        
+        function getStatusBadge(status) {
+            status = (status || '').toUpperCase();
+            let classes = 'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ';
+            if (status === 'LULUS') return classes + 'bg-green-100 text-green-800';
+            if (status === 'TOLAK' || status === 'DIBATALKAN') return classes + 'bg-red-100 text-red-800';
+            return classes + 'bg-yellow-100 text-yellow-800';
+        }
+
+        function renderApplicationHistory(applications) {
+            applicationHistoryBody.innerHTML = '';
+            const sortedApps = applications.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            if (sortedApps.length === 0) {
+                noHistoryMessage.classList.remove('hidden');
+                applicationHistoryBody.closest('div.overflow-x-auto').classList.add('hidden');
+            } else {
+                noHistoryMessage.classList.add('hidden');
+                applicationHistoryBody.closest('div.overflow-x-auto').classList.remove('hidden');
+                sortedApps.forEach(app => {
+                    const row = applicationHistoryBody.insertRow();
+                    const formattedDate = new Date(app.timestamp).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+                    let actionButtons = 'Tiada';
+                    if ((app.status || '').toUpperCase() === 'BARU') {
+                        actionButtons = `
+                            <button class="action-btn bg-blue-100 text-blue-800 update-app-btn" data-id="${app.id_permohonan}">Kemaskini</button>
+                        `;
+                    }
+                    row.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${formattedDate}</td>
+                        <td class="px-4 py-3 text-sm text-gray-800">${app.tujuan || '-'}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm"><span class="${getStatusBadge(app.status)}">${app.status || 'N/A'}</span></td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm space-x-2">${actionButtons}</td>
+                    `;
+                });
+            }
+        }
+        
+        async function refreshDataAndView() {
+            allDataCache = null;
+            statusMessage.textContent = 'Memuat semula data...';
+            try {
+                const data = await fetchData();
+                const foundItem = data.murid.find(item => item.kod_waris.toString() === currentItem.kod_waris.toString());
+                if (foundItem) {
+                    renderResults(foundItem);
+                    const filteredApps = data.permohonan.filter(app => app.kod_waris.toString() === foundItem.kod_waris.toString());
+                    renderApplicationHistory(filteredApps);
+                }
+            } catch (err) {
+                statusMessage.textContent = `Gagal memuat semula: ${err.message}`;
+            } finally {
+                statusMessage.textContent = '';
+            }
+        }
+
+        applicationHistoryBody.addEventListener('click', async (e) => {
+            const updateButton = e.target.closest('.update-app-btn');
+            
+            if (updateButton) {
+                const appId = updateButton.dataset.id;
+                const appToUpdate = allDataCache.permohonan.find(app => app.id_permohonan === appId);
+                if (appToUpdate) {
+                    document.getElementById('applicationTitle').textContent = 'Kemaskini Permohonan';
+                    document.getElementById('appSubmitButtonText').textContent = 'Simpan Kemaskini';
+                    document.getElementById('appIdInput').value = appToUpdate.id_permohonan;
+                    document.getElementById('appNamaPemohon').value = currentItem.nama_waris;
+                    document.getElementById('appNamaAnak').value = currentItem.nama_anak;
+                    document.getElementById('appTujuan').value = appToUpdate.tujuan;
+                    document.getElementById('appTarikhKeluar').value = new Date(appToUpdate.tarikh_keluar).toISOString().split('T')[0];
+                    document.getElementById('appMasaKeluar').value = appToUpdate.masa_keluar;
+                    document.getElementById('appTarikhKembali').value = new Date(appToUpdate.tarikh_kembali).toISOString().split('T')[0];
+                    document.getElementById('appMasaKembali').value = appToUpdate.masa_kembali;
+                    switchView('application');
+                }
             }
         });
 
-        function toggleLoading(isLoading) {
-            if (isLoading) {
-                searchButton.disabled = true;
-                buttonText.classList.add('hidden');
-                searchIcon.classList.add('hidden');
-                loadingSpinner.classList.remove('hidden');
-            } else {
-                searchButton.disabled = false;
-                buttonText.classList.remove('hidden');
-                searchIcon.classList.remove('hidden');
-                loadingSpinner.classList.add('hidden');
-            }
-        }
+        document.getElementById('newApplicationButton').addEventListener('click', () => {
+            document.getElementById('applicationTitle').textContent = 'Borang Permohonan Keluar';
+            document.getElementById('appSubmitButtonText').textContent = 'Hantar Permohonan';
+            applicationForm.reset(); 
+            document.getElementById('appIdInput').value = '';
+            document.getElementById('appNamaPemohon').value = currentItem.nama_waris;
+            document.getElementById('appNamaAnak').value = currentItem.nama_anak;
+            switchView('application');
+        });
+        
+        applicationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const appSubmitButton = document.getElementById('appSubmitButton');
+            setButtonLoading(appSubmitButton, true, 'Menghantar...');
 
-        async function cariMaklumatMurid() {
-            const kodWaris = kodWarisInput.value.trim();
+            const appId = document.getElementById('appIdInput').value;
+            const isUpdate = !!appId;
 
-            // Sembunyikan paparan lama
-            muridInfoContainer.classList.add('hidden');
-            errorMessage.classList.add('hidden');
+            const appData = {
+                tujuan: document.getElementById('appTujuan').value,
+                tarikhKeluar: document.getElementById('appTarikhKeluar').value,
+                masaKeluar: document.getElementById('appMasaKeluar').value,
+                tarikhKembali: document.getElementById('appTarikhKembali').value,
+                masaKembali: document.getElementById('appMasaKembali').value,
+            };
 
-            if (!kodWaris) {
-                errorText.textContent = 'Sila masukkan Kod Waris.';
-                errorMessage.classList.remove('hidden');
-                return;
-            }
-            
-            // BLOK IF YANG MENYEBABKAN RALAT TELAH DIBUANG DARI SINI
-
-            toggleLoading(true);
+            const payload = {
+                action: isUpdate ? 'updatePermohonan' : 'createPermohonan',
+                data: isUpdate ? { ...appData, id_permohonan: appId } : { ...appData, kodWaris: currentItem.kod_waris, namaPemohon: currentItem.nama_waris, namaAnak: currentItem.nama_anak }
+            };
 
             try {
-                const url = `${SCRIPT_URL}?action=getMuridData&kodWaris=${encodeURIComponent(kodWaris)}`;
-                const response = await fetch(url);
-                const result = await response.json();
-
-                if (result.success) {
-                    const data = result.data;
-                    document.getElementById('namaWaris').textContent = data.namaWaris;
-                    document.getElementById('namaAnak').textContent = data.namaAnak;
-                    document.getElementById('email').textContent = data.email;
-                    document.getElementById('noTelefon').textContent = data.noTelefon;
-                    document.getElementById('jantina').textContent = data.jantina;
-                    document.getElementById('tingkatan').textContent = data.tingkatan;
-                    
-                    muridInfoContainer.classList.remove('hidden');
-                } else {
-                    errorText.textContent = result.message || 'Sesuatu yang tidak kena berlaku.';
-                    errorMessage.classList.remove('hidden');
-                }
-            } catch (error) {
-                console.error('Fetch Error:', error);
-                errorText.textContent = 'Gagal menghubungi server. Sila periksa sambungan internet anda atau URL Web App.';
-                errorMessage.classList.remove('hidden');
-            } finally {
-                toggleLoading(false);
+                await postData(payload);
+                 setTimeout(async () => {
+                    alert(`Permohonan berjaya ${isUpdate ? 'dikemaskini' : 'dihantar'}!`);
+                    await refreshDataAndView();
+                    switchView('results');
+                }, 1500);
+            } catch (err) {
+                alert(`Gagal: ${err.message}`);
+                setButtonLoading(appSubmitButton, false);
             }
-        }
-    </script>
+        });
 
+        searchForm.addEventListener('submit', async (e) => { e.preventDefault(); const kodWaris = kodWarisInput.value.trim(); if (!kodWaris) { statusMessage.textContent = 'Sila masukkan Kod Waris.'; return; } setButtonLoading(document.getElementById('searchButton'), true, 'Mencari...'); try { const data = await fetchData(); const foundItem = data.murid.find(item => item.kod_waris.toString().toLowerCase() === kodWaris.toLowerCase()); if (foundItem) { renderResults(foundItem); const filteredApps = data.permohonan.filter(app => app.kod_waris.toString() === foundItem.kod_waris.toString()); renderApplicationHistory(filteredApps); switchView('results'); } else { statusMessage.textContent = 'Kod Waris tidak ditemui. Sila cuba lagi.'; } } catch (err) { statusMessage.textContent = `Ralat: ${err.message}`; } finally { setButtonLoading(document.getElementById('searchButton'), false); } });
+        
+        updateForm.addEventListener('submit', async (e) => { 
+            e.preventDefault(); 
+            const saveButton = document.getElementById('saveButton'); 
+            setButtonLoading(saveButton, true, 'Menyimpan...'); 
+            const updatedData = { kod_waris: currentItem.kod_waris, nama_waris: document.getElementById('namaWarisInput').value, email: document.getElementById('emailInput').value, no_telefon: document.getElementById('noTelefonInput').value, nama_anak: document.getElementById('namaAnakInput').value, jantina: document.getElementById('jantinaInput').value, tingkatan: document.getElementById('tingkatanInput').value, }; 
+            try { 
+                await postData({ action: 'update', data: updatedData }); 
+                setTimeout(async () => {
+                    renderResults(updatedData); 
+                    allDataCache = null; 
+                    alert('Maklumat berjaya dikemaskini!'); 
+                    setEditMode(false); 
+                }, 1500);
+            } catch (err) { 
+                alert(`Gagal mengemaskini: ${err.message}`); 
+            } finally { 
+                setButtonLoading(saveButton, false); 
+            } 
+        });
+
+        document.getElementById('updateButton').addEventListener('click', () => setEditMode(true));
+        document.getElementById('cancelButton').addEventListener('click', () => setEditMode(false));
+        document.getElementById('cancelApplicationButton').addEventListener('click', () => switchView('results'));
+        document.getElementById('backToSearchButton').addEventListener('click', () => { kodWarisInput.value = ''; statusMessage.textContent = 'Sila mulakan carian.'; switchView('search'); });
+        
+        // Skrip untuk Tarikh dan Masa
+        document.addEventListener('DOMContentLoaded', () => {
+            const datetimeEl = document.getElementById('datetime');
+            function updateDateTime() {
+                const now = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+                datetimeEl.textContent = now.toLocaleDateString('ms-MY', options);
+            }
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+        });
+
+        switchView('search');
+    </script>
 </body>
 </html>
