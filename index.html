@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Maklumat Waris & Permohonan Outing</title>
+    <!-- Memuatkan Tailwind CSS untuk penggayaan -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Gaya tambahan untuk pengalaman pengguna yang lebih baik */
+        body { font-family: 'Inter', sans-serif; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Menyembunyikan elemen secara lalai */
+        .hidden { display: none; }
+    </style>
+    <!-- Memuatkan Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Sistem Maklumat Waris & Outing</h1>
+            <p class="text-gray-500 mt-1">Sila masukkan Kod Waris untuk paparan maklumat.</p>
+        </header>
+
+        <!-- Bahagian Carian Kod Waris -->
+        <div id="lookup-section">
+            <div class="space-y-4">
+                <div>
+                    <label for="kodWarisInput" class="block text-sm font-medium text-gray-700">Kod Waris</label>
+                    <input type="text" id="kodWarisInput" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="Contoh: W001">
+                </div>
+                <button id="search-btn" class="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    Cari Maklumat
+                </button>
+            </div>
+        </div>
+
+        <!-- Spinner/Loading Indicator -->
+        <div id="loading" class="hidden flex justify-center items-center my-8">
+            <div class="spinner"></div>
+            <p class="ml-4 text-gray-600">Sila tunggu, sedang memuatkan data...</p>
+        </div>
+
+        <!-- Bahagian Paparan & Kemas Kini Maklumat -->
+        <div id="results-section" class="hidden">
+            <!-- Maklumat Pelajar -->
+            <div class="mb-8 border-b pb-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Maklumat Anak</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p><strong>Nama:</strong> <span id="namaAnak"></span></p>
+                    <p><strong>Tingkatan:</strong> <span id="tingkatan"></span></p>
+                    <p><strong>Jantina:</strong> <span id="jantina"></span></p>
+                </div>
+            </div>
+
+            <!-- Borang Kemas Kini Maklumat Waris -->
+            <div class="mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Maklumat Waris (Boleh Dikemas Kini)</h2>
+                <div class="space-y-4">
+                    <input type="hidden" id="rowNumber">
+                    <input type="hidden" id="kodWarisHidden">
+                    <div>
+                        <label for="namaWaris" class="block text-sm font-medium text-gray-700">Nama Waris</label>
+                        <input type="text" id="namaWaris" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label for="noTelefon" class="block text-sm font-medium text-gray-700">No. Telefon</label>
+                        <input type="tel" id="noTelefon" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <button id="update-btn" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700">
+                        Kemas Kini Maklumat
+                    </button>
+                </div>
+            </div>
+
+            <!-- Borang Permohonan Outing -->
+            <div class="border-t pt-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Borang Permohonan Outing</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="tujuan" class="block text-sm font-medium text-gray-700">Tujuan Outing</label>
+                        <textarea id="tujuan" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" placeholder="Contoh: Balik kampung, urusan keluarga, dll."></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="tarikhKeluar" class="block text-sm font-medium text-gray-700">Tarikh Keluar</label>
+                            <input type="date" id="tarikhKeluar" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="masaKeluar" class="block text-sm font-medium text-gray-700">Masa Keluar</label>
+                            <input type="time" id="masaKeluar" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="tarikhKembali" class="block text-sm font-medium text-gray-700">Tarikh Kembali</label>
+                            <input type="date" id="tarikhKembali" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                        <div>
+                            <label for="masaKembali" class="block text-sm font-medium text-gray-700">Masa Kembali</label>
+                            <input type="time" id="masaKembali" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                        </div>
+                    </div>
+                    <button id="submit-outing-btn" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700">
+                        Hantar Permohonan Outing
+                    </button>
+                </div>
+            </div>
+             <button id="logout-btn" class="mt-8 w-full bg-gray-500 text-white font-bold py-2 px-4 rounded-md hover:bg-gray-600">
+                Log Keluar / Cari Kod Lain
+            </button>
+        </div>
+
+        <!-- Bahagian Mesej Maklum Balas -->
+        <div id="message-area" class="mt-6 text-center"></div>
+
+    </div>
+
+    <script>
+        // PENTING: Gantikan URL ini dengan URL Web App anda selepas 'deploy'
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2qoLRLsq42YApWCjsQMZzgRn8b7ldCj0Fg18lKaFyjFhl0L9fcdBqps3w0lge5kVu/exec";
+
+        // Rujukan kepada elemen-elemen DOM
+        const lookupSection = document.getElementById('lookup-section');
+        const resultsSection = document.getElementById('results-section');
+        const loading = document.getElementById('loading');
+        const messageArea = document.getElementById('message-area');
+
+        const searchBtn = document.getElementById('search-btn');
+        const updateBtn = document.getElementById('update-btn');
+        const submitOutingBtn = document.getElementById('submit-outing-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        /**
+         * Fungsi untuk memaparkan mesej maklum balas kepada pengguna.
+         * @param {string} text - Teks mesej.
+         * @param {boolean} isSuccess - Menentukan warna mesej (hijau untuk berjaya, merah untuk gagal).
+         */
+        function showMessage(text, isSuccess) {
+            messageArea.textContent = text;
+            messageArea.className = 'mt-6 text-center p-3 rounded-md ';
+            messageArea.className += isSuccess ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            // Mesej akan hilang selepas 5 saat
+            setTimeout(() => { messageArea.innerHTML = ''; messageArea.className = 'mt-6 text-center'; }, 5000);
+        }
+
+        /**
+         * Fungsi untuk mengendalikan carian maklumat waris.
+         */
+        async function handleSearch() {
+            const kodWaris = document.getElementById('kodWarisInput').value;
+            if (!kodWaris) {
+                showMessage('Sila masukkan Kod Waris anda.', false);
+                return;
+            }
+            
+            loading.classList.remove('hidden');
+            messageArea.innerHTML = '';
+            lookupSection.classList.add('hidden');
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'getMaklumatWaris', kodWaris: kodWaris })
+                });
+
+                // Ralat CORS biasanya berlaku jika skrip tidak di-deploy dengan betul.
+                // fetch akan throw error, jadi kita tangkap di blok catch.
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    const data = result.data;
+                    // Paparkan data dalam borang
+                    document.getElementById('namaAnak').textContent = data.namaAnak;
+                    document.getElementById('tingkatan').textContent = data.tingkatan;
+                    document.getElementById('jantina').textContent = data.jantina;
+                    document.getElementById('namaWaris').value = data.namaWaris;
+                    document.getElementById('email').value = data.email;
+                    document.getElementById('noTelefon').value = data.noTelefon;
+                    document.getElementById('rowNumber').value = data.row;
+                    document.getElementById('kodWarisHidden').value = data.kodWaris;
+                    
+                    resultsSection.classList.remove('hidden');
+                } else {
+                    showMessage(result.message, false);
+                    lookupSection.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Ralat Fetch:', error);
+                showMessage('Gagal menghubungi pelayan. Pastikan URL Web App adalah betul dan anda mempunyai capaian internet.', false);
+                lookupSection.classList.remove('hidden');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Fungsi untuk mengemas kini maklumat waris.
+         */
+        async function handleUpdate() {
+            const payload = {
+                row: document.getElementById('rowNumber').value,
+                kodWaris: document.getElementById('kodWarisHidden').value,
+                namaWaris: document.getElementById('namaWaris').value,
+                email: document.getElementById('email').value,
+                noTelefon: document.getElementById('noTelefon').value
+            };
+
+            loading.classList.remove('hidden');
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'updateMaklumatWaris', payload: payload })
+                });
+                const result = await response.json();
+                showMessage(result.message, result.success);
+            } catch (error) {
+                console.error('Ralat Fetch:', error);
+                showMessage('Gagal mengemas kini data. Sila cuba lagi.', false);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Fungsi untuk menghantar permohonan outing.
+         */
+        async function handleSubmitOuting() {
+            const payload = {
+                kodWaris: document.getElementById('kodWarisHidden').value,
+                namaWaris: document.getElementById('namaWaris').value,
+                namaAnak: document.getElementById('namaAnak').textContent,
+                tujuan: document.getElementById('tujuan').value,
+                tarikhKeluar: document.getElementById('tarikhKeluar').value,
+                masaKeluar: document.getElementById('masaKeluar').value,
+                tarikhKembali: document.getElementById('tarikhKembali').value,
+                masaKembali: document.getElementById('masaKembali').value
+            };
+
+            // Validasi ringkas
+            if (!payload.tujuan || !payload.tarikhKeluar || !payload.masaKeluar || !payload.tarikhKembali || !payload.masaKembali) {
+                showMessage('Sila lengkapkan semua maklumat permohonan outing.', false);
+                return;
+            }
+
+            loading.classList.remove('hidden');
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'submitPermohonanOuting', payload: payload })
+                });
+                const result = await response.json();
+                showMessage(result.message, result.success);
+                if (result.success) {
+                    // Kosongkan borang outing selepas berjaya hantar
+                    document.getElementById('tujuan').value = '';
+                    document.getElementById('tarikhKeluar').value = '';
+                    document.getElementById('masaKeluar').value = '';
+                    document.getElementById('tarikhKembali').value = '';
+                    document.getElementById('masaKembali').value = '';
+                }
+            } catch (error) {
+                console.error('Ralat Fetch:', error);
+                showMessage('Gagal menghantar permohonan. Sila cuba lagi.', false);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+        
+        /**
+         * Fungsi untuk log keluar atau kembali ke halaman carian.
+         */
+        function handleLogout() {
+            resultsSection.classList.add('hidden');
+            lookupSection.classList.remove('hidden');
+            document.getElementById('kodWarisInput').value = '';
+            messageArea.innerHTML = '';
+        }
+
+        // Menambah 'event listener' pada butang-butang
+        searchBtn.addEventListener('click', handleSearch);
+        updateBtn.addEventListener('click', handleUpdate);
+        submitOutingBtn.addEventListener('click', handleSubmitOuting);
+        logoutBtn.addEventListener('click', handleLogout);
+
+    </script>
+</body>
+</html>
