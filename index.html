@@ -79,6 +79,8 @@
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tarikh Mohon</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tujuan</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pelulus</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tarikh Tindakan</th>
                                     <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Tindakan</th>
                                 </tr>
                             </thead>
@@ -121,7 +123,6 @@
                             <div><label class="font-medium text-gray-700">Masa Kembali</label><input type="time" id="appMasaKembali" class="input-field" required></div>
                         </div>
                         
-                        <!-- MEDAN MUAT NAIK GAMBAR -->
                         <div>
                             <label class="font-medium text-gray-700">Muat Naik Bukti (Pilihan, < 5MB)</label>
                             <input type="file" id="appBukti" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*">
@@ -142,7 +143,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzYJBLTB1XAaLd1kp0WK07MhKBwDK3ZzmTRcDeZec6jB4NW66mRVxttYKeaTbcZzR8OOQ/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwyZ-wxCV53bX3AJJUnr7_ZnF9RgKbqult813W1V6KDWTt1cX3mal8NuDhwN1Zv7ZAB8A/exec';
 
         const views = { search: document.getElementById('searchView'), results: document.getElementById('resultsView'), application: document.getElementById('applicationView') };
         const searchForm = document.getElementById('searchForm');
@@ -244,6 +245,14 @@
                 sortedApps.forEach(app => {
                     const row = applicationHistoryBody.insertRow();
                     const formattedDate = new Date(app.timestamp).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+                    
+                    let tarikhTindakanHtml = '-';
+                    if (app.tarikh_kelulusan) {
+                        tarikhTindakanHtml = new Date(app.tarikh_kelulusan).toLocaleString('ms-MY', {
+                            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                    }
+
                     let actionButtons = 'Tiada';
                     if ((app.status || '').toUpperCase() === 'BARU') {
                         actionButtons = `
@@ -254,6 +263,8 @@
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">${formattedDate}</td>
                         <td class="px-4 py-3 text-sm text-gray-800">${app.tujuan || '-'}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm"><span class="${getStatusBadge(app.status)}">${app.status || 'N/A'}</span></td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-700">${app.pelulus || '-'}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${tarikhTindakanHtml}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm space-x-2">${actionButtons}</td>
                     `;
                 });
