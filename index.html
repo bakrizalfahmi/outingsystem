@@ -20,7 +20,6 @@
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8 relative">
 
-        <!-- ===== BAHAGIAN HEADER BARU ===== -->
         <header class="text-center mb-10">
             <img src="https://i.ibb.co/5hf6PqP9/smkab-T.png" alt="Logo SMKA Baling" class="w-24 h-24 mx-auto mb-4">
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900 uppercase">Sekolah Menengah Kebangsaan Agama Baling</h1>
@@ -37,7 +36,7 @@
                 <form id="searchForm" class="flex flex-col sm:flex-row gap-3 mb-6">
                     <input type="text" id="kodWarisInput" placeholder="Masukkan Kod Waris..." class="flex-grow input-field">
                     <button type="submit" id="searchButton" class="w-full sm:w-auto bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
-                        <span id="searchButtonText">Cari</span>
+                        <span id="searchButtonText">Cari Maklumat</span>
                         <div id="loadingSpinner" class="hidden loader ease-linear rounded-full border-2 border-t-2 border-gray-200 h-5 w-5" style="border-top-color: white;"></div>
                     </button>
                 </form>
@@ -121,6 +120,14 @@
                             <div><label class="font-medium text-gray-700">Tarikh Kembali</label><input type="date" id="appTarikhKembali" class="input-field" required></div>
                             <div><label class="font-medium text-gray-700">Masa Kembali</label><input type="time" id="appMasaKembali" class="input-field" required></div>
                         </div>
+                        
+                        <!-- MEDAN MUAT NAIK GAMBAR -->
+                        <div>
+                            <label class="font-medium text-gray-700">Muat Naik Bukti (Pilihan, < 5MB)</label>
+                            <input type="file" id="appBukti" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept="image/*">
+                            <p id="filePreview" class="text-xs text-gray-500 mt-1"></p>
+                        </div>
+
                     </div>
                     <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
                         <button id="appSubmitButton" type="submit" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
@@ -135,7 +142,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw_nFI9_pBScTrv4E9IrARtsVbiBYjGuHS92bsxnGfYBSW56Xh0JeDijUofk7mXwJ8fvg/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzYJBLTB1XAaLd1kp0WK07MhKBwDK3ZzmTRcDeZec6jB4NW66mRVxttYKeaTbcZzR8OOQ/exec';
 
         const views = { search: document.getElementById('searchView'), results: document.getElementById('resultsView'), application: document.getElementById('applicationView') };
         const searchForm = document.getElementById('searchForm');
@@ -148,6 +155,7 @@
         
         let allDataCache = null;
         let currentItem = null;
+        let selectedFile = null;
 
         function snakeToCamel(str) {
             return str.toLowerCase().replace(/([_][a-z])/g, group => group.toUpperCase().replace('_', ''));
@@ -270,6 +278,32 @@
             }
         }
 
+        document.getElementById('appBukti').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 5242880) { // 5MB
+                    alert("Saiz fail terlalu besar. Sila pilih gambar di bawah 5MB.");
+                    e.target.value = "";
+                    selectedFile = null;
+                    document.getElementById('filePreview').textContent = "";
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    selectedFile = {
+                        fileName: file.name,
+                        mimeType: file.type,
+                        fileData: event.target.result
+                    };
+                    document.getElementById('filePreview').textContent = `Fail dipilih: ${file.name}`;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                selectedFile = null;
+                document.getElementById('filePreview').textContent = '';
+            }
+        });
+
         applicationHistoryBody.addEventListener('click', async (e) => {
             const updateButton = e.target.closest('.update-app-btn');
             
@@ -299,6 +333,8 @@
             document.getElementById('appIdInput').value = '';
             document.getElementById('appNamaPemohon').value = currentItem.nama_waris;
             document.getElementById('appNamaAnak').value = currentItem.nama_anak;
+            selectedFile = null;
+            document.getElementById('filePreview').textContent = '';
             switchView('application');
         });
         
@@ -316,6 +352,8 @@
                 masaKeluar: document.getElementById('appMasaKeluar').value,
                 tarikhKembali: document.getElementById('appTarikhKembali').value,
                 masaKembali: document.getElementById('appMasaKembali').value,
+                fileData: selectedFile ? selectedFile.fileData : null,
+                fileName: selectedFile ? selectedFile.fileName : null
             };
 
             const payload = {
@@ -363,7 +401,6 @@
         document.getElementById('cancelApplicationButton').addEventListener('click', () => switchView('results'));
         document.getElementById('backToSearchButton').addEventListener('click', () => { kodWarisInput.value = ''; statusMessage.textContent = 'Sila mulakan carian.'; switchView('search'); });
         
-        // Skrip untuk Tarikh dan Masa
         document.addEventListener('DOMContentLoaded', () => {
             const datetimeEl = document.getElementById('datetime');
             function updateDateTime() {
